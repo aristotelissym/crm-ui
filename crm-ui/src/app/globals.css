@@ -15,6 +15,21 @@
   }
 }
 
+@theme {
+  --color-*: initial;
+  --color-white: #fff;
+  --color-primary: #13243b;
+  --color-secondary: #bea771;
+  --color-accent: #d3c8b9;
+  --color-periferiko: #28594a;
+  --color-imeres: #e55146;
+  --color-panellinio: #1f3855;
+  --color-success: #1e7e34;
+  --color-danger: #a71d2a;
+  --color-info: #117a8b;
+  --color-warning: #cc9a06;
+}
+
 .animate-fade-in-up {
   animation: fade-in-up 0.3s ease-out;
 }
