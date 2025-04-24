@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
 
         <footer className="bg-secondary dark:bg-primary text-center py-4 text-sm text-accent dark:text-accent">
-          © 2025 My Next App. All rights reserved.
+          © 2025 Designed and Made with ❤️ by Hippocrates Digital Team.
         </footer>
       </body>
     </html>
