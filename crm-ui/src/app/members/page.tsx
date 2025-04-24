@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { DB_Members } from '@/types'
-import { useSearchParams } from 'next/navigation'
+import { Menu } from '@headlessui/react'
+import { AlignJustify } from 'lucide-react'
+
 
 const pageSize = 10
 
@@ -18,6 +20,9 @@ export default function MembersPage() {
   const [page, setPage] = useState(1)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [showToast, setShowToast] = useState(false)
+  const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<DB_Members | null>(null)
+
 
 
 
@@ -232,6 +237,53 @@ export default function MembersPage() {
                 <td className="p-3">{m.sector}</td>
                 <td className="p-3">{m.health_unit}</td>
                 <td className="p-3">
+                  <Menu as="div" className="relative inline-block text-left">
+                    <Menu.Button className="flex items-center justify-end w-8 h-8 rounded hover:bg-gray-200">
+                      <AlignJustify className="h-5 w-5 text-gray-600" />
+                    </Menu.Button>
+
+                    <Menu.Items className="absolute right-0 z-20 mt-2 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <div className="py-1">
+                        <Menu.Item>
+                          <button
+                            onClick={() => {
+                              setSelectedMember(m)
+                              setShowDetailDialog(true)
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-accent"
+                          >
+                            More
+                          </button>
+                        </Menu.Item>
+                        <Menu.Item>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(m.email)
+                              setShowToast(true)
+                              setTimeout(() => setShowToast(false), 2000)
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-accent"
+                          >
+                            Copy Email
+                          </button>
+                        </Menu.Item>
+                        <Menu.Item as="div">
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete ${m.first_name}?`)) {
+                                // TODO: call delete API
+                                alert(`${m.first_name} deleted.`)
+                              }
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-accent"
+                          >
+                            Delete
+                          </button>
+                        </Menu.Item>
+                      </div>
+                    </Menu.Items>
+
+                  </Menu>
                 </td>
               </tr>
             ))}
@@ -240,7 +292,7 @@ export default function MembersPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center items-center gap-4">
+      <div className="flex justify-center items-center gap-4 text-primary">
         <button
           disabled={page === 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -260,10 +312,37 @@ export default function MembersPage() {
         </button>
       </div>
       {showToast && (
-        <div className="fixed top-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-fade-in-up z-50">
-          📋 Emails copied to clipboard!
+        <div className="fixed top-6 right-6 bg-success text-white px-4 py-2 rounded shadow-lg animate-fade-in-up z-50">
+          {selectedRows.length} Emails copied to clipboard! 📋
         </div>
       )}
+      // More details for each user
+      {showDetailDialog && selectedMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg relative">
+            <h2 className="text-lg text-primary font-bold mb-4">Λεπτομέρειες</h2>
+            <ul className="text-sm space-y-1 text-primary">
+              <li><strong>ID:</strong> {selectedMember.id}</li>
+              <li><strong>Επίθετο:</strong> {selectedMember.last_name}</li>
+              <li><strong>Όνομα:</strong> {selectedMember.first_name}</li>
+              <li><strong>Ειδικότητα:</strong> {selectedMember.expertise}</li>
+              <li><strong>Τομέας:</strong> {selectedMember.sector}</li>
+              <li><strong>Μονάδα Υγείας:</strong> {selectedMember.health_unit}</li>
+              <li><strong>Τόπος Εργασίας:</strong> {selectedMember.work_place}</li>
+              <li><strong>Τόπος Διαμονής:</strong> {selectedMember.home_place}</li>
+              <li><strong>Email:</strong> {selectedMember.email}</li>
+              <li><strong>Τηλέφωνο:</strong> {selectedMember.phone}</li>
+            </ul>
+            <button
+              className="absolute top-2 right-2 text-gray-500 text-primary hover:text-panellinio"
+              onClick={() => setShowDetailDialog(false)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
