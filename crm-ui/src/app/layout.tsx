@@ -32,8 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className="flex flex-col min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white transition-colors">
-        <header className="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
+      <body className="flex flex-col min-h-screen bg-white text-primary dark:bg-white dark:text-white transition-colors">
+        <header className="flex items-center justify-between px-6 py-4 border-b dark:bg-primary dark:border-gray-700">
           <div className="flex items-center gap-4">
             <span className="font-bold text-xl">Logo</span>
             <Link href="/" className="hover:underline">Home</Link>
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
 
-        <footer className="bg-gray-200 dark:bg-gray-700 text-center py-4 text-sm text-gray-700 dark:text-gray-300">
+        <footer className="bg-secondary dark:bg-primary text-center py-4 text-sm text-accent dark:text-accent">
           © 2025 My Next App. All rights reserved.
         </footer>
       </body>

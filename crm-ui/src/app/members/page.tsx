@@ -85,16 +85,16 @@ export default function MembersPage() {
 
 
   return (
-    <div className="text-blue-600 ßcol-black p-4 space-y-6">
+    <div className="text-white-600 ßcol-black p-4 space-y-6">
       {/* Top Filters */}
-      <div className="flex flex-col md:flex-row justify-between gap-4">
+      <div className="text-primary flex flex-col md:flex-row justify-between gap-4">
         <div className="flex flex-wrap gap-2">
           <input
             type="text"
             placeholder="Αναζήτηση..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border p-2 rounded w-60"
+            className="border border-primary p-2 rounded w-60"
           />
 
           <select
@@ -110,7 +110,7 @@ export default function MembersPage() {
           <select
             value={filterExpertise}
             onChange={(e) => setFilterExpertise(e.target.value)}
-            className="border p-2 rounded"
+            className=" border p-2 rounded"
           >
             <option value="">Ειδικότητα</option>
             <option value="Ψυχιατρική">Ψυχιατρική</option>
@@ -121,7 +121,7 @@ export default function MembersPage() {
           <select
             value={filterWorkPlace}
             onChange={(e) => setFilterWorkPlace(e.target.value)}
-            className="border p-2 rounded"
+            className=" border p-2 rounded"
           >
             <option value="">Τόπος Εργασίας</option>
             <option value="Θεσσαλονίκη">Θεσσαλονίκη</option>
@@ -141,10 +141,9 @@ export default function MembersPage() {
                 navigator.clipboard.writeText(selectedEmails.join(', '))
                 setShowToast(true)
                 setTimeout(() => setShowToast(false), 3000)
-                console.log("HELLLO")
               }
             }}
-            className="px-4 py-2 rounded bg-headerBg text-white hover:bg-headerBorder"
+            className="px-4 py-2 rounded bg-primary dark:bg-primary text-white hover:bg-headerBorder"
           >
             Copy Emails
           </button>
@@ -157,13 +156,13 @@ export default function MembersPage() {
                 setSelectedRows([])
               }
             }}
-            className="px-4 py-2 rounded bg-gray-300 text-primaryText hover:bg-gray-400"
+            className="px-4 py-2 rounded bg-primary text-white hover:bg-info"
           >
             {selectedRows.length < filtered.length ? 'Select All' : 'Deselect All'}
           </button>
           <button
             onClick={exportCSV}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            className="bg-green-600 text-white px-4 py-2 rounded bg-primary hover:bg-info"
           >
             Export CSV
           </button>
@@ -172,8 +171,8 @@ export default function MembersPage() {
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full border rounded">
-          <thead className="bg-gray-100 text-left">
+        <table className="min-w-full border border-primary rounded">
+          <thead className="bg-primary text-left">
             <tr>
               <th className="p-3">
                 {/* <input
@@ -207,11 +206,11 @@ export default function MembersPage() {
               <th className="p-3">Περισσότερα</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='bg-white text-primary'>
             {paginatedData.map((m) => (
               <tr
                 key={m.id}
-                className={`cursor-pointer hover:bg-gray-100 ${selectedRows.includes(m.id) ? 'bg-gray-200' : ''}`}
+                className={`cursor-pointer hover:bg-accent ${selectedRows.includes(m.id) ? 'bg-accent' : ''}`}
               >
                 <td className="p-3">
                   <input
