@@ -18,6 +18,8 @@
 @theme {
   --color-*: initial;
   --color-white: #fff;
+  --color-olivegreen: #BAB86C;
+  --color-grey: #cccccc;
   --color-primary: #13243b;
   --color-secondary: #bea771;
   --color-accent: #d3c8b9;
@@ -26,6 +28,7 @@
   --color-panellinio: #1f3855;
   --color-success: #1e7e34;
   --color-danger: #a71d2a;
+  --color-redfaded: #FF8686;
   --color-info: #117a8b;
   --color-warning: #cc9a06;
 }
