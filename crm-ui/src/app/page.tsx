@@ -1,17 +1,27 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import * as d3 from 'd3'
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  ArcElement
+} from 'chart.js'
+import { Bar, Doughnut } from 'react-chartjs-2'
 import { DB_Members } from '@/types'
+
+ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 export default function Dashboard() {
   const [totalCount, setTotalCount] = useState(0)
   const [expertiseCount, setExpertiseCount] = useState(0)
   const [publicCount, setPublicCount] = useState(0)
   const [privateCount, setPrivateCount] = useState(0)
-  const [expertiseData, setExpertiseData] = useState([])
-  const treemapRef = useRef(null)
+  const [chartData, setChartData] = useState<any>(null)
 
   useEffect(() => {
     axios.get('http://localhost:4000/members').then((res) => {
@@ -26,95 +36,99 @@ export default function Dashboard() {
       setPrivateCount(
         data.filter((member: any) => member.sector === 'Ιδιωτικός').length // Example
       )
-      const grouped = d3.rollup(
-        data,
-        (v) => v.length,
-        (d: any) => d.expertise
-      )
 
-      const formattedData = {
-        name: 'Expertise',
-        children: Array.from(grouped, ([name, value]) => ({ name, value }))
-      }
-      setExpertiseData(formattedData)
-      
+      // Group by Expertise and count
+      const expertiseMap = new Map<string, number>()
+      data.forEach((member: DB_Members) => {
+        const exp = member.expertise
+        expertiseMap.set(exp, (expertiseMap.get(exp) || 0) + 1)
+      })
+
+      const labels = Array.from(expertiseMap.keys())
+      const values = Array.from(expertiseMap.values())
+
+      setChartData({
+        labels,
+        datasets: [
+          {
+            label: 'Αριθμός Ειδικοτήτων',
+            data: values,
+            backgroundColor: [
+              '#FF6B6B',
+              '#FFD93D',
+              '#6BCB77',
+              '#4D96FF',
+              '#845EC2',
+              '#F9F871',
+              '#00C9A7',
+              '#FFC75F',
+              '#FF9671',
+              '#D65DB1',
+              '#0081CF'
+            ],
+            hoverBackgroundColor: '#FFDAC1',
+            hoverOffset: 15
+          }
+        ]
+      })
     })
   }, [])
-
-  useEffect(() => {
-    if (expertiseData.children && treemapRef.current) {
-      const width = 400
-      const height = 300
-
-      const root = d3
-        .hierarchy(expertiseData)
-        .sum(d => d.value)
-        .sort((a, b) => b.value - a.value)
-
-      d3.select(treemapRef.current).selectAll('*').remove()
-
-      const svg = d3
-        .select(treemapRef.current)
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height)
-
-      const treemapLayout = d3.treemap().size([width, height]).padding(1)
-      treemapLayout(root)
-
-      svg
-        .selectAll('rect')
-        .data(root.leaves())
-        .enter()
-        .append('rect')
-        .attr('x', d => d.x0)
-        .attr('y', d => d.y0)
-        .attr('width', d => d.x1 - d.x0)
-        .attr('height', d => d.y1 - d.y0)
-        .attr('fill', 'steelblue')
-
-      svg
-        .selectAll('text')
-        .data(root.leaves())
-        .enter()
-        .append('text')
-        .attr('x', d => d.x0 + 4)
-        .attr('y', d => d.y0 + 14)
-        .text(d => d.data.name)
-        .attr('font-size', '10px')
-        .attr('fill', 'white')
-    }
-  }, [expertiseData])
 
   return (
     <div className="p-4 space-y-6">
       {/* First Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-semibold text-primary">Σύνολο Μελών</h3>
+          <h3 className="text-xl font-semibold text-primary">👥 Σύνολο Μελών</h3>
           <p className="text-3xl font-bold text-panellinio mt-2">{totalCount}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-semibold text-primary">Γενική/Οικογενειακή Ιατρική</h3>
+          <h3 className="text-xl font-semibold text-primary">Τακτικά Μέλη</h3>
           <p className="text-3xl font-bold text-panellinio mt-2">{expertiseCount}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 flex items-stretch justify-items-center-safe">
           <div className='border-r border-primary mr-5 pr-5'>
-          <h3 className="text-xl font-semibold text-primary">Δημόσιος Τομέας</h3>
-          <p className="text-3xl font-bold text-panellinio mt-2">{publicCount}</p>
+            <h3 className="text-xl font-semibold text-primary">🏛️ Δημόσιος Τομέας</h3>
+            <p className="text-3xl font-bold text-panellinio mt-2">{publicCount}</p>
           </div>
           <div>
-          <h3 className="text-xl font-semibold text-primary">Ιδιωτικός Τομέας</h3>
-          <p className="text-3xl font-bold text-panellinio mt-2">{privateCount}</p>
+            <h3 className="text-xl font-semibold text-primary">🏣 Ιδιωτικός Τομέας</h3>
+            <p className="text-3xl font-bold text-panellinio mt-2">{privateCount}</p>
           </div>
         </div>
       </div>
 
       {/* Second Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 align-center">
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-secondary">Μεγάλο Section</h3>
-          <div className="h-40 bg-gray-100 dark:bg-gray-700 rounded-md mt-2"></div>
+          <h3 className="text-lg font-semibold text-primary">Κατανομή Ειδικοτήτων</h3>
+          {/* {chartData && <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />} */}
+          <div className='items-center ml-4 justify-center flex h-[250px]'>
+            {chartData && (
+              <Doughnut
+                data={chartData}
+                options={{
+                  maintainAspectRatio: false,
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      display: true,
+                      position: "left"
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          const label = context.label || ''
+                          const value = context.raw as number
+                          return `${label}: ${value}`
+                        }
+                      }
+                    },
+                  }
+                }}
+              />
+            )}
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-secondary">Μικρό Section</h3>
@@ -123,14 +137,40 @@ export default function Dashboard() {
       </div>
 
       {/* Third Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 align-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-secondary">Μικρό Section</h3>
           <div className="h-40 bg-gray-100 dark:bg-gray-700 rounded-md mt-2"></div>
         </div>
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-secondary">Μεγάλο Section</h3>
-          <div className="h-40 bg-gray-100 dark:bg-gray-700 rounded-md mt-2"></div>
+          <h3 className="text-lg font-semibold text-primary">Κατανομή Ειδικοτήτων</h3>
+          {/* {chartData && <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />} */}
+          <div className='items-center ml-4 justify-center flex h-[250px]'>
+            {chartData && (
+              <Doughnut
+                data={chartData}
+                options={{
+                  maintainAspectRatio: false,
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      display: true,
+                      position: "left"
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          const label = context.label || ''
+                          const value = context.raw as number
+                          return `${label}: ${value}`
+                        }
+                      }
+                    },
+                  }
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

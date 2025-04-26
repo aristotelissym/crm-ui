@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { DB_Members } from '@/types'
-import { Menu } from '@headlessui/react'
+import { Dialog, Menu } from '@headlessui/react'
 import { AlignJustify } from 'lucide-react'
+import toast, { Toaster } from 'react-hot-toast'
+import axios from 'axios'
 
 
 const pageSize = 10
@@ -23,7 +25,54 @@ export default function MembersPage() {
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [selectedMember, setSelectedMember] = useState<DB_Members | null>(null)
 
+  const [isOpen, setIsOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    last_name: '',
+    first_name: '',
+    expertise: '',
+    sector: '',
+    health_unit: '',
+    work_place: '',
+    home_place: '',
+    email: '',
+    phone: '',
+    consent: 1
+  })
 
+  const refreshMembers = () => {
+    axios.get('http://localhost:4000/members').then((res) => setMembers(res.data))
+  }
+
+  useEffect(() => {
+    refreshMembers()
+  }, [])
+
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const handleCreate = async () => {
+    try {
+      await axios.post('http://localhost:4000/members', formData)
+      toast.success(`Ο χρήστης ${formData.first_name} δημιουργήθηκε με επιτυχία!`);
+      refreshMembers();
+      setIsOpen(false)
+    } catch (err) {
+      toast.error("Κάτι δε πήγε καλά");
+    }
+  }
+
+  const handleDelete = (id: string) => {
+    axios.delete(`http://localhost:4000/members/${id}`)
+      .then(() => {
+        toast.success(`Το Μέλος με αναγνωριστικό ${id} διαγράφηκε με επιτυχία!`);
+        refreshMembers();
+      })
+      .catch((err) => {
+        toast.error("Κάτι δε πήγε καλά", err);
+      })
+  }
 
 
   useEffect(() => {
@@ -66,11 +115,6 @@ export default function MembersPage() {
       setSortBy(key)
       setSortAsc(true)
     }
-  }
-
-  const copyAllEmails = () => {
-    const emails = filtered.map((m) => m.email).join(', ')
-    navigator.clipboard.writeText(emails)
   }
 
   const exportCSV = () => {
@@ -139,6 +183,55 @@ export default function MembersPage() {
         <div className="flex gap-2">
           <button
             onClick={() => {
+              setIsOpen(true)
+            }}
+            className="px-4 py-2 rounded bg-success text-white hover:bg-olivegreen"
+          >
+            Νέο Μέλος
+          </button>
+
+          <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
+            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+
+            <div className="fixed inset-0 flex items-center justify-center p-4">
+              <Dialog.Panel className="mx-auto max-w-2xl rounded bg-white p-6">
+                <Dialog.Title className="text-lg font-bold text-primary">
+                  Create New Member
+                </Dialog.Title>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  {Object.keys(formData).map((key) => (
+                    <input
+                      key={key}
+                      name={key}
+                      value={(formData as any)[key]}
+                      onChange={handleChange}
+                      placeholder={key.replace('_', ' ')}
+                      className="border p-2 rounded bg-white text-primary"
+                    />
+                  ))}
+                </div>
+
+                <div className="flex justify-end space-x-2 mt-6">
+                  <button
+                    className="px-4 py-2 bg-grey rounded hover:bg-primary"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Ακύρωση
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-success hover:bg-olivegreen text-white rounded"
+                    onClick={handleCreate}
+                  >
+                    Δημιουργία
+                  </button>
+                </div>
+              </Dialog.Panel>
+            </div>
+          </Dialog>
+
+          <button
+            onClick={() => {
               const selectedEmails = filtered
                 .filter((m) => selectedRows.includes(m.id))
                 .map((m) => m.email)
@@ -150,7 +243,7 @@ export default function MembersPage() {
             }}
             className="px-4 py-2 rounded bg-primary dark:bg-primary text-white hover:bg-headerBorder"
           >
-            Copy Emails
+            Αντιγραφή Emails
           </button>
 
           <button
@@ -163,21 +256,21 @@ export default function MembersPage() {
             }}
             className="px-4 py-2 rounded bg-primary text-white hover:bg-info"
           >
-            {selectedRows.length < filtered.length ? 'Select All' : 'Deselect All'}
+            {selectedRows.length < filtered.length ? 'Επιλογή Όλων' : 'Καθαρισμός'}
           </button>
           <button
             onClick={exportCSV}
-            className="bg-green-600 text-white px-4 py-2 rounded bg-primary hover:bg-info"
+            className="text-white px-4 py-2 rounded bg-primary hover:bg-info"
           >
-            Export CSV
+            Εξαγωγή σε CSV
           </button>
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full border border-primary rounded">
-          <thead className="bg-primary text-left">
+        <table className="min-w-full border border-grey rounded">
+          <thead className="bg-grey text-left">
             <tr>
               <th className="p-3">
                 {/* <input
@@ -270,14 +363,15 @@ export default function MembersPage() {
                         <Menu.Item as="div">
                           <button
                             onClick={() => {
-                              if (confirm(`Delete ${m.first_name}?`)) {
+                              if (confirm(`Θέλετε ο χρήστης ${m.first_name} να διαγραφθεί;`)) {
                                 // TODO: call delete API
                                 alert(`${m.first_name} deleted.`)
+                                handleDelete(m.id)
                               }
                             }}
                             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-accent"
                           >
-                            Delete
+                            Διαγραφή
                           </button>
                         </Menu.Item>
                       </div>
