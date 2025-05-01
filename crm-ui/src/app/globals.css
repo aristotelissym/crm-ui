@@ -19,7 +19,8 @@
   --color-*: initial;
   --color-white: #fff;
   --color-olivegreen: #BAB86C;
-  --color-grey: #cccccc;
+  --color-gray: #cccccc;
+  --color-gray-300: #a8a7a7;
   --color-primary: #13243b;
   --color-secondary: #bea771;
   --color-accent: #d3c8b9;
@@ -35,4 +36,17 @@
 
 .animate-fade-in-up {
   animation: fade-in-up 0.3s ease-out;
+}
+
+h1, h2, label, input, select {
+   color: var(--color-primary)
+}
+
+thead {
+  background-color: #3d5577;
+  color: white;
+}
+
+table {
+  color: var(--color-primary)
 }
