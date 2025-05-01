@@ -131,48 +131,16 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-secondary">Μικρό Section</h3>
+          <h3 className="text-lg font-semibold text-secondary">Ρόλος</h3>
+          <h4 className="text-lg font-semibold text-secondary">Εκπαιδευτές</h4>
+          <h4 className="text-lg font-semibold text-secondary">Ερευνητές</h4>
+          <h4 className="text-lg font-semibold text-secondary">Άλλο</h4>
           <div className="h-40 bg-gray-100 dark:bg-gray-700 rounded-md mt-2"></div>
         </div>
       </div>
 
       {/* Third Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 align-center">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-secondary">Μικρό Section</h3>
-          <div className="h-40 bg-gray-100 dark:bg-gray-700 rounded-md mt-2"></div>
-        </div>
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-primary">Κατανομή Ειδικοτήτων</h3>
-          {/* {chartData && <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />} */}
-          <div className='items-center ml-4 justify-center flex h-[250px]'>
-            {chartData && (
-              <Doughnut
-                data={chartData}
-                options={{
-                  maintainAspectRatio: false,
-                  responsive: true,
-                  plugins: {
-                    legend: {
-                      display: true,
-                      position: "left"
-                    },
-                    tooltip: {
-                      callbacks: {
-                        label: function (context) {
-                          const label = context.label || ''
-                          const value = context.raw as number
-                          return `${label}: ${value}`
-                        }
-                      }
-                    },
-                  }
-                }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
+
     </div>
   )
 }
