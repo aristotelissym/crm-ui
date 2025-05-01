@@ -1,120 +1,232 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DB_Members } from '@/types'
-import { Dialog, Menu } from '@headlessui/react'
-import { AlignJustify } from 'lucide-react'
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
+import { AlignJustify, Pencil, Trash2, Plus, Filter, SortAsc, SortDesc, Search } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import axios from 'axios'
+import { DB_Members } from '@/types'
 
-
-const pageSize = 10
+// Constants
+const PAGE_SIZE = 10
+const API_URL = 'http://localhost:4000/members'
+const INITIAL_FORM_STATE: Partial<DB_Members> = {
+  last_name: '',
+  first_name: '',
+  expertise: '',
+  sector: '',
+  health_unit: '',
+  work_place: '',
+  home_place: '',
+  email: '',
+  phone: '',
+  consent: '1',
+}
 
 export default function MembersPage() {
+  // State management
   const [members, setMembers] = useState<DB_Members[]>([])
   const [filtered, setFiltered] = useState<DB_Members[]>([])
   const [search, setSearch] = useState('')
-  const [filterSector, setFilterSector] = useState('')
-  const [filterExpertise, setFilterExpertise] = useState('')
-  const [filterWorkPlace, setFilterWorkPlace] = useState('')
-  const [sortBy, setSortBy] = useState<keyof DB_Members>('last_name')
-  const [sortAsc, setSortAsc] = useState(true)
-  const [page, setPage] = useState(1)
-  const [selectedRows, setSelectedRows] = useState<string[]>([])
-  const [showToast, setShowToast] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [selectedMember, setSelectedMember] = useState<DB_Members | null>(null)
-
-  const [isOpen, setIsOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    last_name: '',
-    first_name: '',
-    expertise: '',
+  const [filters, setFilters] = useState({
     sector: '',
-    health_unit: '',
-    work_place: '',
-    home_place: '',
-    email: '',
-    phone: '',
-    consent: 1
+    expertise: '',
+    workPlace: '',
   })
+  const [sorting, setSorting] = useState({
+    field: 'last_name' as keyof DB_Members,
+    ascending: true,
+  })
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+  })
+  const [selectedRows, setSelectedRows] = useState<string[]>([])
+  const [formData, setFormData] = useState<Partial<DB_Members>>(INITIAL_FORM_STATE)
+  const [dialogState, setDialogState] = useState<null | 'create' | 'edit'>(null)
+  const [editMemberId, setEditMemberId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const refreshMembers = () => {
-    axios.get('http://localhost:4000/members').then((res) => setMembers(res.data))
+  // Get unique filter options from data
+  const filterOptions = {
+    sectors: [...new Set(members.map(m => m.sector))].filter(Boolean),
+    expertise: [...new Set(members.map(m => m.expertise))].filter(Boolean),
+    workPlaces: [...new Set(members.map(m => m.work_place))].filter(Boolean),
   }
 
-  useEffect(() => {
-    refreshMembers()
-  }, [])
-
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
-
-  const handleCreate = async () => {
+  // Fetch members data
+  const fetchMembers = async () => {
+    setIsLoading(true)
     try {
-      await axios.post('http://localhost:4000/members', formData)
-      toast.success(`Ο χρήστης ${formData.first_name} δημιουργήθηκε με επιτυχία!`);
-      refreshMembers();
-      setIsOpen(false)
-    } catch (err) {
-      toast.error("Κάτι δε πήγε καλά");
+      const res = await axios.get(API_URL)
+      setMembers(res.data)
+    } catch (error) {
+      toast.error('Αποτυχία φόρτωσης δεδομένων')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleDelete = (id: string) => {
-    axios.delete(`http://localhost:4000/members/${id}`)
-      .then(() => {
-        toast.success(`Το Μέλος με αναγνωριστικό ${id} διαγράφηκε με επιτυχία!`);
-        refreshMembers();
-      })
-      .catch((err) => {
-        toast.error("Κάτι δε πήγε καλά", err);
-      })
-  }
-
-
+  // Initial data fetch
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch(`http://localhost:4000/members`)
-      const data: DB_Members[] = await res.json()
-      setMembers(data)
-    }
-    fetchData()
+    fetchMembers()
   }, [])
 
+  // Apply filters, search, and sorting
   useEffect(() => {
     let data = [...members]
 
-    // Filter
-    if (search)
+    // Apply search
+    if (search) {
       data = data.filter((m) =>
         `${m.first_name} ${m.last_name} ${m.email}`.toLowerCase().includes(search.toLowerCase())
       )
-    if (filterSector) data = data.filter((m) => m.sector === filterSector)
-    if (filterExpertise) data = data.filter((m) => m.expertise === filterExpertise)
-    if (filterWorkPlace) data = data.filter((m) => m.work_place === filterWorkPlace)
+    }
 
-    // Sort
+    // Apply filters
+    if (filters.sector) {
+      data = data.filter((m) => m.sector === filters.sector)
+    }
+    if (filters.expertise) {
+      data = data.filter((m) => m.expertise === filters.expertise)
+    }
+    if (filters.workPlace) {
+      data = data.filter((m) => m.work_place === filters.workPlace)
+    }
+
+    // Apply sorting
     data.sort((a, b) => {
-      const valA = a[sortBy]?.toString().toLowerCase()
-      const valB = b[sortBy]?.toString().toLowerCase()
-      return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA)
+      const valA = a[sorting.field]?.toString().toLowerCase() || ''
+      const valB = b[sorting.field]?.toString().toLowerCase() || ''
+      return sorting.ascending ? valA.localeCompare(valB) : valB.localeCompare(valA)
     })
 
+    // Update filtered data and pagination
     setFiltered(data)
-  }, [search, filterSector, filterExpertise, filterWorkPlace, sortBy, sortAsc, members])
+    setPagination({
+      ...pagination,
+      totalPages: Math.ceil(data.length / PAGE_SIZE),
+      currentPage: Math.min(pagination.currentPage, Math.ceil(data.length / PAGE_SIZE) || 1)
+    })
+  }, [search, filters, sorting, members])
 
-  const totalPages = Math.ceil(filtered.length / pageSize)
-  const paginatedData = filtered.slice((page - 1) * pageSize, page * pageSize)
+  // Calculate current page items
+  const paginatedData = filtered.slice(
+    (pagination.currentPage - 1) * PAGE_SIZE,
+    pagination.currentPage * PAGE_SIZE
+  )
 
-  const handleSort = (key: keyof DB_Members) => {
-    if (sortBy === key) setSortAsc(!sortAsc)
-    else {
-      setSortBy(key)
-      setSortAsc(true)
+  // Form handlers
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  // Reset form and close dialog
+  const resetForm = () => {
+    setFormData(INITIAL_FORM_STATE)
+    setDialogState(null)
+    setEditMemberId(null)
+  }
+
+  // Create new member
+  const handleCreate = async () => {
+    try {
+      await axios.post(API_URL, formData)
+      toast.success('Ο χρήστης δημιουργήθηκε με επιτυχία!')
+      resetForm()
+      fetchMembers()
+    } catch (error) {
+      toast.error('Κάτι δεν πήγε καλά')
     }
+  }
+
+  // Edit existing member
+  const handleEdit = async () => {
+    if (editMemberId) {
+      try {
+        await axios.patch(`${API_URL}/${editMemberId}`, formData)
+        toast.success('Το μέλος ενημερώθηκε!')
+        resetForm()
+        fetchMembers()
+      } catch (error) {
+        toast.error('Αποτυχία ενημέρωσης')
+      }
+    }
+  }
+
+  // Open edit dialog
+  const openEditDialog = (member: DB_Members) => {
+    setFormData({ ...member })
+    setEditMemberId(member.id)
+    setDialogState('edit')
+  }
+
+  // Delete member
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μέλος;')) {
+      try {
+        await axios.delete(`${API_URL}/${id}`)
+        toast.success('Ο χρήστης διαγράφηκε!')
+        fetchMembers()
+      } catch (error) {
+        toast.error('Σφάλμα διαγραφής')
+      }
+    }
+  }
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedRows.length === 0) return
+
+    if (window.confirm(`Είστε σίγουροι ότι θέλετε να διαγράψετε ${selectedRows.length} μέλη;`)) {
+      try {
+        // We could implement a bulk delete endpoint or do it sequentially
+        await Promise.all(selectedRows.map(id => axios.delete(`${API_URL}/${id}`)))
+        toast.success(`${selectedRows.length} μέλη διαγράφηκαν με επιτυχία!`)
+        setSelectedRows([])
+        fetchMembers()
+      } catch (error) {
+        toast.error('Σφάλμα κατά τη διαγραφή')
+      }
+    }
+  }
+
+  // Toggle row selection
+  const toggleRowSelection = (id: string) => {
+    setSelectedRows(prev =>
+      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+    )
+  }
+
+  // Toggle all rows selection
+  const toggleAllSelection = () => {
+    if (selectedRows.length === paginatedData.length) {
+      setSelectedRows([])
+    } else {
+      setSelectedRows(paginatedData.map(m => m.id))
+    }
+  }
+
+  // Handle sort change
+  const handleSortChange = (field: keyof DB_Members) => {
+    setSorting(prev => ({
+      field,
+      ascending: prev.field === field ? !prev.ascending : true
+    }))
+  }
+
+  // Handle filter change
+  const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }))
+    setPagination(prev => ({ ...prev, currentPage: 1 }))
+  }
+
+  // Handle pagination
+  const goToPage = (page: number) => {
+    setPagination(prev => ({ ...prev, currentPage: page }))
   }
 
   const exportCSV = () => {
@@ -132,311 +244,390 @@ export default function MembersPage() {
     link.click()
   }
 
-
   return (
-    <div className="text-white-600 ßcol-black p-4 space-y-6">
-      {/* Top Filters */}
-      <div className="text-primary flex flex-col md:flex-row justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
-          <input
-            type="text"
-            placeholder="Αναζήτηση..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border border-primary p-2 rounded w-60"
-          />
+    <div className="px-4 py-8 max-w-7xl mx-auto">
+      <Toaster />
 
-          <select
-            value={filterSector}
-            onChange={(e) => setFilterSector(e.target.value)}
-            className="border p-2 rounded"
-          >
-            <option value="">Τομέας</option>
-            <option value="Δημόσιος">Δημόσιος</option>
-            <option value="Ιδιωτικός">Ιδιωτικός</option>
-          </select>
+      {/* Header */}
+      <div>
+        
+      </div>
+      <h1 className="text-2xl font-bold justify-start mr-6">Διαχείριση Μελών</h1>
 
-          <select
-            value={filterExpertise}
-            onChange={(e) => setFilterExpertise(e.target.value)}
-            className=" border p-2 rounded"
-          >
-            <option value="">Ειδικότητα</option>
-            <option value="Ψυχιατρική">Ψυχιατρική</option>
-            <option value="Παθολογία">Παθολογία</option>
-            <option value="ΓενικήΟικογενειακή Ιατρική">Γενική/Οικογενειακή Ιατρική</option>
-          </select>
+      <div className="flex justify-end items-center mb-6">
+        <button
+          onClick={() => {
+            setFormData(INITIAL_FORM_STATE)
+            setDialogState('create')
+          }}
+          className="flex items-center px-4 py-2 mr-4 bg-olivegreen text-white rounded hover:bg-success"
+        >
+          <Plus size={18} className="mr-1" />
+          Νέο Μέλος
+        </button>
+        <button
+          onClick={() => {
+            if (selectedRows.length < filtered.length) {
+              setSelectedRows(filtered.map((m) => m.id))
+            } else {
+              setSelectedRows([])
+            }
+          }}
+          className="px-4 py-2 rounded bg-info text-white hover:bg-panellinio mr-4"
+        >
+          {selectedRows.length < filtered.length ? 'Επιλογή Όλων' : 'Καθαρισμός'}
+        </button>
+        <button
+          onClick={exportCSV}
+          className="text-white px-4 py-2 mr-6 rounded bg-info hover:bg-panellinio"
+        >
+          Εξαγωγή σε CSV
+        </button>
 
-          <select
-            value={filterWorkPlace}
-            onChange={(e) => setFilterWorkPlace(e.target.value)}
-            className=" border p-2 rounded"
-          >
-            <option value="">Τόπος Εργασίας</option>
-            <option value="Θεσσαλονίκη">Θεσσαλονίκη</option>
-            <option value="Άγνωστο">Άγνωστο</option>
-            <option value="Κυκλάδες">Κυκλάδες</option>
-            <option value="Αττική">Αττική</option>
-          </select>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              setIsOpen(true)
-            }}
-            className="px-4 py-2 rounded bg-success text-white hover:bg-olivegreen"
-          >
-            Νέο Μέλος
-          </button>
-
-          <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
-            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-
-            <div className="fixed inset-0 flex items-center justify-center p-4">
-              <Dialog.Panel className="mx-auto max-w-2xl rounded bg-white p-6">
-                <Dialog.Title className="text-lg font-bold text-primary">
-                  Create New Member
-                </Dialog.Title>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  {Object.keys(formData).map((key) => (
-                    <input
-                      key={key}
-                      name={key}
-                      value={(formData as any)[key]}
-                      onChange={handleChange}
-                      placeholder={key.replace('_', ' ')}
-                      className="border p-2 rounded bg-white text-primary"
-                    />
-                  ))}
-                </div>
-
-                <div className="flex justify-end space-x-2 mt-6">
-                  <button
-                    className="px-4 py-2 bg-grey rounded hover:bg-primary"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Ακύρωση
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-success hover:bg-olivegreen text-white rounded"
-                    onClick={handleCreate}
-                  >
-                    Δημιουργία
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </div>
-          </Dialog>
-
-          <button
+        <button
             onClick={() => {
               const selectedEmails = filtered
                 .filter((m) => selectedRows.includes(m.id))
                 .map((m) => m.email)
-              if (selectedEmails.length > 0) {
+              if (selectedEmails.length == 1) {
+                toast.success('1 Email Αντιγράφηκε')
                 navigator.clipboard.writeText(selectedEmails.join(', '))
-                setShowToast(true)
-                setTimeout(() => setShowToast(false), 3000)
+              } else if (selectedEmails.length > 0) {
+                toast.success(`${selectedEmails.length} Emails Αντιγράφηκαν`)
+              } else {
+                toast('Δεν έχουν επιλεγεί Email', { icon: "📂", position: "top-center" })
               }
             }}
-            className="px-4 py-2 rounded bg-primary dark:bg-primary text-white hover:bg-headerBorder"
+            className="px-4 py-2 rounded bg-info text-white hover:bg-panellinio"
           >
             Αντιγραφή Emails
           </button>
+      </div>
 
-          <button
-            onClick={() => {
-              if (selectedRows.length < filtered.length) {
-                setSelectedRows(filtered.map((m) => m.id))
-              } else {
-                setSelectedRows([])
-              }
+      {/* Search and Filters */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="relative md:col-span-2">
+          <input
+            type="text"
+            placeholder="Αναζήτηση..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setPagination(prev => ({ ...prev, currentPage: 1 }))
             }}
-            className="px-4 py-2 rounded bg-primary text-white hover:bg-info"
-          >
-            {selectedRows.length < filtered.length ? 'Επιλογή Όλων' : 'Καθαρισμός'}
-          </button>
-          <button
-            onClick={exportCSV}
-            className="text-white px-4 py-2 rounded bg-primary hover:bg-info"
-          >
-            Εξαγωγή σε CSV
-          </button>
+            className="w-full pl-10 pr-4 py-2 border rounded"
+          />
+          <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
         </div>
+
+        <select
+          value={filters.sector}
+          onChange={(e) => handleFilterChange('sector', e.target.value)}
+          className="border rounded py-2 px-3"
+        >
+          <option value="">Όλοι οι Τομείς</option>
+          {filterOptions.sectors.map(sector => (
+            <option key={sector} value={sector}>{sector}</option>
+          ))}
+        </select>
+
+        <select
+          value={filters.expertise}
+          onChange={(e) => handleFilterChange('expertise', e.target.value)}
+          className="border rounded py-2 px-3"
+        >
+          <option value="">Όλες οι Ειδικότητες</option>
+          {filterOptions.expertise.map(exp => (
+            <option key={exp} value={exp}>{exp}</option>
+          ))}
+        </select>
+
+        <select
+          value={filters.workPlace}
+          onChange={(e) => handleFilterChange('workPlace', e.target.value)}
+          className="border rounded py-2 px-3"
+        >
+          <option value="">Όλοι οι Χώροι Εργασίας</option>
+          {filterOptions.workPlaces.map(place => (
+            <option key={place} value={place}>{place}</option>
+          ))}
+        </select>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full border border-grey rounded">
-          <thead className="bg-grey text-left">
-            <tr>
-              <th className="p-3">
-                {/* <input
+        <table className="w-full">
+          <thead>
+            <tr className="">
+              <th className="p-2">
+                <input
                   type="checkbox"
-                  checked={selectedRows.length === filtered.length && filtered.length > 0}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedRows(filtered.map((m) => m.id))
-                    } else {
-                      setSelectedRows([])
-                    }
-                  }}
-                /> */}
+                  checked={selectedRows.length === paginatedData.length && paginatedData.length > 0}
+                  onChange={toggleAllSelection}
+                />
               </th>
-              {[
-                ['Όνομα', 'first_name'],
-                ['Επίθετο', 'last_name'],
-                ['Email', 'email'],
-                ['Ειδικότητα', 'expertise'],
-                ['Τομέας', 'sector'],
-                ['Μονάδα Υγείας', 'health_unit'],
-              ].map(([label, key]) => (
-                <th
-                  key={key}
-                  className="p-3 cursor-pointer"
-                  onClick={() => handleSort(key as keyof DB_Members)}
-                >
-                  {label} {sortBy === key && (sortAsc ? '↑' : '↓')}
-                </th>
-              ))}
-              <th className="p-3">Περισσότερα</th>
+              <th
+                className="p-2 cursor-pointer"
+                onClick={() => handleSortChange('last_name')}
+              >
+                <div className="flex items-center">
+                  Επώνυμο
+                  {sorting.field === 'last_name' && (
+                    sorting.ascending ? <SortAsc size={14} /> : <SortDesc size={14} />
+                  )}
+                </div>
+              </th>
+              <th
+                className="p-2 cursor-pointer"
+                onClick={() => handleSortChange('first_name')}
+              >
+                <div className="flex items-center">
+                  Όνομα
+                  {sorting.field === 'first_name' && (
+                    sorting.ascending ? <SortAsc size={14} /> : <SortDesc size={14} />
+                  )}
+                </div>
+              </th>
+              <th className="p-2">Τομέας</th>
+              <th className="p-2">Ειδικότητα</th>
+              <th className="p-2">Χώρος Εργασίας</th>
+              <th className="p-2">Email</th>
+              <th className="p-2">Ενέργειες</th>
             </tr>
           </thead>
-          <tbody className='bg-white text-primary'>
-            {paginatedData.map((m) => (
-              <tr
-                key={m.id}
-                className={`cursor-pointer hover:bg-accent ${selectedRows.includes(m.id) ? 'bg-accent' : ''}`}
-              >
-                <td className="p-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.includes(m.id)}
-                    onChange={() => {
-                      setSelectedRows((prev) =>
-                        prev.includes(m.id)
-                          ? prev.filter((id) => id !== m.id)
-                          : [...prev, m.id]
-                      )
-                    }}
-                  />
-                </td>
-                <td className="p-3">{m.first_name}</td>
-                <td className="p-3">{m.last_name}</td>
-                <td className="p-3">{m.email}</td>
-                <td className="p-3">{m.expertise}</td>
-                <td className="p-3">{m.sector}</td>
-                <td className="p-3">{m.health_unit}</td>
-                <td className="p-3">
-                  <Menu as="div" className="relative inline-block text-left">
-                    <Menu.Button className="flex items-center justify-end w-8 h-8 rounded hover:bg-gray-200">
-                      <AlignJustify className="h-5 w-5 text-gray-600" />
-                    </Menu.Button>
-
-                    <Menu.Items className="absolute right-0 z-20 mt-2 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                      <div className="py-1">
-                        <Menu.Item>
-                          <button
-                            onClick={() => {
-                              setSelectedMember(m)
-                              setShowDetailDialog(true)
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-accent"
-                          >
-                            More
-                          </button>
-                        </Menu.Item>
-                        <Menu.Item>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(m.email)
-                              setShowToast(true)
-                              setTimeout(() => setShowToast(false), 2000)
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-accent"
-                          >
-                            Copy Email
-                          </button>
-                        </Menu.Item>
-                        <Menu.Item as="div">
-                          <button
-                            onClick={() => {
-                              if (confirm(`Θέλετε ο χρήστης ${m.first_name} να διαγραφθεί;`)) {
-                                // TODO: call delete API
-                                alert(`${m.first_name} deleted.`)
-                                handleDelete(m.id)
-                              }
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-accent"
-                          >
-                            Διαγραφή
-                          </button>
-                        </Menu.Item>
-                      </div>
-                    </Menu.Items>
-
-                  </Menu>
-                </td>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="p-4 text-center">Φόρτωση...</td>
               </tr>
-            ))}
+            ) : paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="p-4 text-center">Δεν βρέθηκαν αποτελέσματα</td>
+              </tr>
+            ) : (
+              paginatedData.map((member) => (
+                <tr key={member.id} className="hover:bg-accent">
+                  <td className="p-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(member.id)}
+                      onChange={() => toggleRowSelection(member.id)}
+                    />
+                  </td>
+                  <td className="p-2">{member.last_name}</td>
+                  <td className="p-2">{member.first_name}</td>
+                  <td className="p-2">{member.sector}</td>
+                  <td className="p-2">{member.expertise}</td>
+                  <td className="p-2">{member.work_place}</td>
+                  <td className="p-2">{member.email}</td>
+                  <td className="p-2">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => openEditDialog(member)}
+                        className="p-1 bg-blue-500 text-primary rounded hover:bg-info hover:text-white"
+                        title="Επεξεργασία"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(member.id)}
+                        className="p-1 bg-red-500 text-primary rounded hover:bg-redfaded hover:text-white"
+                        title="Διαγραφή"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center gap-4 text-primary">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <span>
-          Page {page} of {totalPages}
-        </span>
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-      {showToast && (
-        <div className="fixed top-6 right-6 bg-success text-white px-4 py-2 rounded shadow-lg animate-fade-in-up z-50">
-          {selectedRows.length} Emails copied to clipboard! 📋
-        </div>
-      )}
-      // More details for each user
-      {showDetailDialog && selectedMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg relative">
-            <h2 className="text-lg text-primary font-bold mb-4">Λεπτομέρειες</h2>
-            <ul className="text-sm space-y-1 text-primary">
-              <li><strong>ID:</strong> {selectedMember.id}</li>
-              <li><strong>Επίθετο:</strong> {selectedMember.last_name}</li>
-              <li><strong>Όνομα:</strong> {selectedMember.first_name}</li>
-              <li><strong>Ειδικότητα:</strong> {selectedMember.expertise}</li>
-              <li><strong>Τομέας:</strong> {selectedMember.sector}</li>
-              <li><strong>Μονάδα Υγείας:</strong> {selectedMember.health_unit}</li>
-              <li><strong>Τόπος Εργασίας:</strong> {selectedMember.work_place}</li>
-              <li><strong>Τόπος Διαμονής:</strong> {selectedMember.home_place}</li>
-              <li><strong>Email:</strong> {selectedMember.email}</li>
-              <li><strong>Τηλέφωνο:</strong> {selectedMember.phone}</li>
-            </ul>
+      {/* Pagination and Actions */}
+      <div className="flex flex-wrap justify-between items-center mt-4">
+        <div>
+          {selectedRows.length > 0 && (
             <button
-              className="absolute top-2 right-2 text-gray-500 text-primary hover:text-panellinio"
-              onClick={() => setShowDetailDialog(false)}
+              onClick={handleBulkDelete}
+              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
             >
-              ✕
+              Διαγραφή επιλεγμένων ({selectedRows.length})
             </button>
-          </div>
+          )}
         </div>
-      )}
 
+        <div className="flex space-x-2 mt-2 sm:mt-0">
+          <button
+            disabled={pagination.currentPage === 1}
+            onClick={() => goToPage(1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            &laquo;
+          </button>
+          <button
+            disabled={pagination.currentPage === 1}
+            onClick={() => goToPage(pagination.currentPage - 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            &lsaquo;
+          </button>
+
+          <span className="px-3 py-1">
+            {pagination.currentPage} / {pagination.totalPages}
+          </span>
+
+          <button
+            disabled={pagination.currentPage === pagination.totalPages}
+            onClick={() => goToPage(pagination.currentPage + 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            &rsaquo;
+          </button>
+          <button
+            disabled={pagination.currentPage === pagination.totalPages}
+            onClick={() => goToPage(pagination.totalPages)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            &raquo;
+          </button>
+        </div>
+      </div>
+
+      {/* Dialog for Create/Edit */}
+      <Dialog open={dialogState !== null} onClose={resetForm}>
+        <div className="fixed inset-0 bg-black/30 text-primary shadow-lg" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-2xl rounded bg-white p-6">
+            <DialogTitle className="text-lg font-bold text-primary mb-4">
+              {dialogState === 'create' ? 'Νέο Μέλος' : 'Επεξεργασία Μέλους'}
+            </DialogTitle>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Επώνυμο</label>
+                <input
+                  name="last_name"
+                  value={formData.last_name || ''}
+                  onChange={handleFormChange}
+                  placeholder="Επώνυμο"
+                  className="w-full border p-2 rounded"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Όνομα</label>
+                <input
+                  name="first_name"
+                  value={formData.first_name || ''}
+                  onChange={handleFormChange}
+                  placeholder="Όνομα"
+                  className="w-full border p-2 rounded"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Τομέας</label>
+                <input
+                  name="sector"
+                  value={formData.sector || ''}
+                  onChange={handleFormChange}
+                  placeholder="Τομέας"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Ειδικότητα</label>
+                <input
+                  name="expertise"
+                  value={formData.expertise || ''}
+                  onChange={handleFormChange}
+                  placeholder="Ειδικότητα"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Μονάδα Υγείας</label>
+                <input
+                  name="health_unit"
+                  value={formData.health_unit || ''}
+                  onChange={handleFormChange}
+                  placeholder="Μονάδα Υγείας"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Χώρος Εργασίας</label>
+                <input
+                  name="work_place"
+                  value={formData.work_place || ''}
+                  onChange={handleFormChange}
+                  placeholder="Χώρος Εργασίας"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Τόπος Κατοικίας</label>
+                <input
+                  name="home_place"
+                  value={formData.home_place || ''}
+                  onChange={handleFormChange}
+                  placeholder="Τόπος Κατοικίας"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  value={formData.email || ''}
+                  onChange={handleFormChange}
+                  placeholder="Email"
+                  className="w-full border p-2 rounded"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Τηλέφωνο</label>
+                <input
+                  name="phone"
+                  value={formData.phone || ''}
+                  onChange={handleFormChange}
+                  placeholder="Τηλέφωνο"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Συγκατάθεση</label>
+                <input
+                  name="consent"
+                  value={formData.consent || '1'}
+                  onChange={handleFormChange}
+                  placeholder="Συγκατάθεση"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 mt-6">
+              <button
+                onClick={resetForm}
+                className="px-4 py-2 bg-gray rounded hover:bg-gray-300"
+              >
+                Ακύρωση
+              </button>
+              <button
+                onClick={dialogState === 'create' ? handleCreate : handleEdit}
+                className="px-4 py-2 bg-success hover:bg-olivegreen text-white rounded"
+              >
+                {dialogState === 'create' ? 'Δημιουργία' : 'Ενημέρωση'}
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </div>
   )
 }
