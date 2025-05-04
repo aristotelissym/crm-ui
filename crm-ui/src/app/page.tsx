@@ -11,7 +11,7 @@ import {
   Legend,
   ArcElement
 } from 'chart.js'
-import { Bar, Doughnut } from 'react-chartjs-2'
+import { Doughnut } from 'react-chartjs-2'
 import { DB_Members } from '@/types'
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
@@ -28,13 +28,13 @@ export default function Dashboard() {
       const data = res.data
       setTotalCount(data.length)
       setExpertiseCount(
-        data.filter((member: any) => member.expertise === 'ΓενικήΟικογενειακή Ιατρική').length
+        data.filter((member: DB_Members) => member.expertise === 'ΓενικήΟικογενειακή Ιατρική').length
       )
       setPublicCount(
-        data.filter((member: any) => member.sector === 'Δημόσιος').length // Example
+        data.filter((member: DB_Members) => member.sector === 'Δημόσιος').length // Example
       )
       setPrivateCount(
-        data.filter((member: any) => member.sector === 'Ιδιωτικός').length // Example
+        data.filter((member: DB_Members) => member.sector === 'Ιδιωτικός').length // Example
       )
 
       // Group by Expertise and count

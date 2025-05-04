@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
-import { AlignJustify, Pencil, Trash2, Plus, Filter, SortAsc, SortDesc, Search } from 'lucide-react'
+import { Pencil, Trash2, Plus, SortAsc, SortDesc, Search } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import axios from 'axios'
 import { DB_Members } from '@/types'
@@ -61,7 +61,8 @@ export default function MembersPage() {
       const res = await axios.get(API_URL)
       setMembers(res.data)
     } catch (error) {
-      toast.error('Αποτυχία φόρτωσης δεδομένων')
+      console.log(API_URL)
+      toast.error('Αποτυχία φόρτωσης δεδομένων' +error)
     } finally {
       setIsLoading(false)
     }
@@ -136,7 +137,7 @@ export default function MembersPage() {
       resetForm()
       fetchMembers()
     } catch (error) {
-      toast.error('Κάτι δεν πήγε καλά')
+      toast.error('Κάτι δεν πήγε καλά \n' +error)
     }
   }
 
@@ -149,7 +150,7 @@ export default function MembersPage() {
         resetForm()
         fetchMembers()
       } catch (error) {
-        toast.error('Αποτυχία ενημέρωσης')
+        toast.error('Αποτυχία ενημέρωσης \n' +error)
       }
     }
   }
@@ -169,7 +170,7 @@ export default function MembersPage() {
         toast.success('Ο χρήστης διαγράφηκε!')
         fetchMembers()
       } catch (error) {
-        toast.error('Σφάλμα διαγραφής')
+        toast.error('Σφάλμα διαγραφής \n' +error)
       }
     }
   }
@@ -186,7 +187,7 @@ export default function MembersPage() {
         setSelectedRows([])
         fetchMembers()
       } catch (error) {
-        toast.error('Σφάλμα κατά τη διαγραφή')
+        toast.error('Σφάλμα κατά τη διαγραφή \n' +error)
       }
     }
   }

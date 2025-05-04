@@ -4,8 +4,7 @@
 
 import './globals.css'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { useEffect } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 
 // export const metadata = {
@@ -29,14 +28,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // const toggleTheme = () => {
   //   setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
   // }
-  
+
 
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen bg-white text-primary dark:bg-white dark:text-white transition-colors">
         <header className="flex items-center justify-between px-6 py-4 border-b dark:bg-primary dark:border-gray-700">
           <div className="flex items-center gap-4">
-            <span className="font-bold text-xl"><img src="~/public/DB_logo.png" alt="" /></span>
+            <img src="DB_logo.png" alt="" />
             <Link href="/" className="hover:underline">Home</Link>
             <Link href="/members" className="hover:underline">Members</Link>
           </div>
