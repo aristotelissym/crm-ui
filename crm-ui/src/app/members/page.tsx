@@ -391,7 +391,7 @@ export default function MembersPage() {
               </th>
               <th className="p-2">Τομέας</th>
               <th className="p-2">Ειδικότητα</th>
-              <th className="p-2">Χώρος Εργασίας</th>
+              <th className="p-2">Τόπος Εργασίας</th>
               <th className="p-2">Email</th>
               <th className="p-2">Ενέργειες</th>
             </tr>
@@ -559,7 +559,7 @@ export default function MembersPage() {
                 />
               </div>
               <div className="form-group">
-                <label className="block text-sm font-medium mb-1">Χώρος Εργασίας</label>
+                <label className="block text-sm font-medium mb-1">Τόπος Εργασίας</label>
                 <input
                   name="work_place"
                   value={formData.work_place || ''}
