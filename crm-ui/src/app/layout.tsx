@@ -36,8 +36,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="flex items-center justify-between px-6 py-4 border-b dark:bg-primary dark:border-gray-700">
           <div className="flex items-center gap-4">
             <img src="DB_logo.png" alt="" />
-            <Link href="/" className="hover:underline">Home</Link>
-            <Link href="/members" className="hover:underline">Members</Link>
+            <Link href="/" className="hover:underline">Αρχική Σελίδα</Link>
+            <Link href="/members" className="hover:underline">Ευρετήριο</Link>
           </div>
           <button
             onClick={toggleTheme}

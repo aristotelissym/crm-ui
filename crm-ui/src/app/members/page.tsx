@@ -558,13 +558,13 @@ export default function MembersPage() {
                   className="w-full border p-2 rounded"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group"> 
                 <label className="block text-sm font-medium mb-1">Τόπος Εργασίας</label>
                 <input
                   name="work_place"
                   value={formData.work_place || ''}
                   onChange={handleFormChange}
-                  placeholder="Χώρος Εργασίας"
+                  placeholder="Τόπος Εργασίας"
                   className="w-full border p-2 rounded"
                 />
               </div>
