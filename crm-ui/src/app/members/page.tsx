@@ -348,7 +348,7 @@ export default function MembersPage() {
           onChange={(e) => handleFilterChange('workPlace', e.target.value)}
           className="border rounded py-2 px-3"
         >
-          <option value="">Όλοι οι Χώροι Εργασίας</option>
+          <option value="">Τόποι Εργασίας</option>
           {filterOptions.workPlaces.map(place => (
             <option key={place} value={place}>{place}</option>
           ))}
