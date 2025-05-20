@@ -14,6 +14,7 @@ const INITIAL_FORM_STATE: Partial<DB_Members> = {
   last_name: '',
   first_name: '',
   expertise: '',
+  role: '',
   sector: '',
   health_unit: '',
   work_place: '',
@@ -32,6 +33,7 @@ export default function MembersPage() {
     sector: '',
     expertise: '',
     workPlace: '',
+    role: ''
   })
   const [sorting, setSorting] = useState({
     field: 'last_name' as keyof DB_Members,
@@ -52,6 +54,7 @@ export default function MembersPage() {
     sectors: [...new Set(members.map(m => m.sector))].filter(Boolean),
     expertise: [...new Set(members.map(m => m.expertise))].filter(Boolean),
     workPlaces: [...new Set(members.map(m => m.work_place))].filter(Boolean),
+    roles: [...new Set(members.map(m => m.role))].filter(Boolean),
   }
 
   // Fetch members data
@@ -62,7 +65,7 @@ export default function MembersPage() {
       setMembers(res.data)
     } catch (error) {
       console.log(API_URL)
-      toast.error('Αποτυχία φόρτωσης δεδομένων' +error)
+      toast.error('Αποτυχία φόρτωσης δεδομένων' + error)
     } finally {
       setIsLoading(false)
     }
@@ -93,6 +96,9 @@ export default function MembersPage() {
     }
     if (filters.workPlace) {
       data = data.filter((m) => m.work_place === filters.workPlace)
+    }
+    if (filters.role) {
+      data = data.filter((m) => m.role === filters.role)
     }
 
     // Apply sorting
@@ -137,7 +143,7 @@ export default function MembersPage() {
       resetForm()
       fetchMembers()
     } catch (error) {
-      toast.error('Κάτι δεν πήγε καλά \n' +error)
+      toast.error('Κάτι δεν πήγε καλά \n' + error)
     }
   }
 
@@ -150,7 +156,7 @@ export default function MembersPage() {
         resetForm()
         fetchMembers()
       } catch (error) {
-        toast.error('Αποτυχία ενημέρωσης \n' +error)
+        toast.error('Αποτυχία ενημέρωσης \n' + error)
       }
     }
   }
@@ -170,7 +176,7 @@ export default function MembersPage() {
         toast.success('Ο χρήστης διαγράφηκε!')
         fetchMembers()
       } catch (error) {
-        toast.error('Σφάλμα διαγραφής \n' +error)
+        toast.error('Σφάλμα διαγραφής \n' + error)
       }
     }
   }
@@ -187,7 +193,7 @@ export default function MembersPage() {
         setSelectedRows([])
         fetchMembers()
       } catch (error) {
-        toast.error('Σφάλμα κατά τη διαγραφή \n' +error)
+        toast.error('Σφάλμα κατά τη διαγραφή \n' + error)
       }
     }
   }
@@ -251,7 +257,7 @@ export default function MembersPage() {
 
       {/* Header */}
       <div>
-        
+
       </div>
       <h1 className="text-2xl font-bold justify-start mr-6">Διαχείριση Μελών</h1>
 
@@ -286,27 +292,27 @@ export default function MembersPage() {
         </button>
 
         <button
-            onClick={() => {
-              const selectedEmails = filtered
-                .filter((m) => selectedRows.includes(m.id))
-                .map((m) => m.email)
-              if (selectedEmails.length == 1) {
-                toast.success('1 Email Αντιγράφηκε')
-                navigator.clipboard.writeText(selectedEmails.join(', '))
-              } else if (selectedEmails.length > 0) {
-                toast.success(`${selectedEmails.length} Emails Αντιγράφηκαν`)
-              } else {
-                toast('Δεν έχουν επιλεγεί Email', { icon: "📂", position: "top-center" })
-              }
-            }}
-            className="px-4 py-2 rounded bg-info text-white hover:bg-panellinio"
-          >
-            Αντιγραφή Emails
-          </button>
+          onClick={() => {
+            const selectedEmails = filtered
+              .filter((m) => selectedRows.includes(m.id))
+              .map((m) => m.email)
+            if (selectedEmails.length == 1) {
+              toast.success('1 Email Αντιγράφηκε')
+              navigator.clipboard.writeText(selectedEmails.join(', '))
+            } else if (selectedEmails.length > 0) {
+              toast.success(`${selectedEmails.length} Emails Αντιγράφηκαν`)
+            } else {
+              toast('Δεν έχουν επιλεγεί Email', { icon: "📂", position: "top-center" })
+            }
+          }}
+          className="px-4 py-2 rounded bg-info text-white hover:bg-panellinio"
+        >
+          Αντιγραφή Emails
+        </button>
       </div>
 
       {/* Search and Filters */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
         <div className="relative md:col-span-2">
           <input
             type="text"
@@ -318,7 +324,7 @@ export default function MembersPage() {
             }}
             className="w-full pl-10 pr-4 py-2 border rounded"
           />
-          <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
+          <Search size={12} className="absolute left-3 top-2.5 ßtext-primary" />
         </div>
 
         <select
@@ -329,6 +335,17 @@ export default function MembersPage() {
           <option value="">Όλοι οι Τομείς</option>
           {filterOptions.sectors.map(sector => (
             <option key={sector} value={sector}>{sector}</option>
+          ))}
+        </select>
+
+        <select
+          value={filters.role}
+          onChange={(e) => handleFilterChange('role', e.target.value)}
+          className="border rounded py-2 px-3"
+        >
+          <option value="">Όλοι οι Ρόλοι</option>
+          {filterOptions.roles.map(role => (
+            <option key={role} value={role}>{role}</option>
           ))}
         </select>
 
@@ -391,7 +408,7 @@ export default function MembersPage() {
               </th>
               <th className="p-2">Τομέας</th>
               <th className="p-2">Ειδικότητα</th>
-              <th className="p-2">Τόπος Εργασίας</th>
+              <th className="p-2">Ρόλος</th>
               <th className="p-2">Email</th>
               <th className="p-2">Ενέργειες</th>
             </tr>
@@ -419,7 +436,7 @@ export default function MembersPage() {
                   <td className="p-2">{member.first_name}</td>
                   <td className="p-2">{member.sector}</td>
                   <td className="p-2">{member.expertise}</td>
-                  <td className="p-2">{member.work_place}</td>
+                  <td className="p-2">{member.role}</td>
                   <td className="p-2">{member.email}</td>
                   <td className="p-2">
                     <div className="flex space-x-2">
@@ -470,19 +487,19 @@ export default function MembersPage() {
           <button
             disabled={pagination.currentPage === 1}
             onClick={() => goToPage(pagination.currentPage - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded disabled:opacity-50 text-primary"
           >
             &lsaquo;
           </button>
 
-          <span className="px-3 py-1">
+          <span className="px-3 py-1 text-primary">
             {pagination.currentPage} / {pagination.totalPages}
           </span>
 
           <button
             disabled={pagination.currentPage === pagination.totalPages}
             onClick={() => goToPage(pagination.currentPage + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded disabled:opacity-50 text-primary"
           >
             &rsaquo;
           </button>
@@ -558,7 +575,7 @@ export default function MembersPage() {
                   className="w-full border p-2 rounded"
                 />
               </div>
-              <div className="form-group"> 
+              <div className="form-group">
                 <label className="block text-sm font-medium mb-1">Τόπος Εργασίας</label>
                 <input
                   name="work_place"
@@ -607,6 +624,16 @@ export default function MembersPage() {
                   value={formData.consent || '1'}
                   onChange={handleFormChange}
                   placeholder="Συγκατάθεση"
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Ρόλος</label>
+                <input
+                  name="role"
+                  value={formData.role || ''}
+                  onChange={handleFormChange}
+                  placeholder="Ρόλος"
                   className="w-full border p-2 rounded"
                 />
               </div>

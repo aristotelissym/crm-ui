@@ -21,6 +21,9 @@ export default function Dashboard() {
   const [expertiseCount, setExpertiseCount] = useState(0)
   const [publicCount, setPublicCount] = useState(0)
   const [privateCount, setPrivateCount] = useState(0)
+  const [researcherCount, setResearcherCount] = useState(0)
+  const [trainerCount, setTrainerCount] = useState(0)
+  const [noTrReCount, setNoTrReCount] = useState(0)
   const [chartData, setChartData] = useState<any>(null)
 
   useEffect(() => {
@@ -28,13 +31,22 @@ export default function Dashboard() {
       const data = res.data
       setTotalCount(data.length)
       setExpertiseCount(
-        data.filter((member: DB_Members) => member.expertise === 'ΓενικήΟικογενειακή Ιατρική').length
+        data.filter((member: DB_Members) => member.expertise === 'Γενική-Οικογενειακή Ιατρική').length
       )
       setPublicCount(
         data.filter((member: DB_Members) => member.sector === 'Δημόσιος').length // Example
       )
       setPrivateCount(
         data.filter((member: DB_Members) => member.sector === 'Ιδιωτικός').length // Example
+      )
+      setResearcherCount(
+        data.filter((member: DB_Members) => member.role === 'Εκπαιδευτής').length // Example
+      )
+      setTrainerCount(
+        data.filter((member: DB_Members) => member.role === 'Ερευνητής').length // Example
+      )
+      setNoTrReCount(
+        data.filter((member: DB_Members) => member.role === 'Ερευνητής').length // Example
       )
 
       // Group by Expertise and count
@@ -131,10 +143,13 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-secondary">Ρόλος</h3>
-          <h4 className="text-lg font-semibold text-secondary">Εκπαιδευτές</h4>
-          <h4 className="text-lg font-semibold text-secondary">Ερευνητές</h4>
-          <h4 className="text-lg font-semibold text-secondary">Άλλο</h4>
+          <h2 className="text-3xl font-semibold text-secondary mb-2">Ρόλος</h2>
+          <h3 className="text-lg font-semibold text-secondary">Εκπαιδευτές</h3>
+            <p className="text-lg font-bold text-panellinio mb-2">{trainerCount}</p>
+          <h3 className="text-lg font-semibold text-secondary">Ερευνητές</h3>         
+            <p className="text-lg font-bold text-panellinio mb-2">{researcherCount}</p>
+          <h3 className="text-lg font-semibold text-secondary">Άλλο</h3>
+            <p className="text-lg font-bold text-panellinio">{noTrReCount}</p>
           <div className="h-40 bg-gray-100 dark:bg-gray-700 rounded-md mt-2"></div>
         </div>
       </div>

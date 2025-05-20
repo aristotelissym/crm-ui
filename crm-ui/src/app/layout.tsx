@@ -39,12 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="hover:underline">Αρχική Σελίδα</Link>
             <Link href="/members" className="hover:underline">Ευρετήριο</Link>
           </div>
-          <button
-            onClick={toggleTheme}
+          <Link
+            href="/admin"
             className="p-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
+            🗂️👨‍💼
+          </Link>
         </header>
 
         <main className="flex-1 p-6">

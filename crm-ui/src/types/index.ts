@@ -3,6 +3,7 @@ export type DB_Members = {
     last_name: string
     first_name: string
     expertise: string
+    role: string
     sector: string
     health_unit: string
     work_place: string
