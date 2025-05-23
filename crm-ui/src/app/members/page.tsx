@@ -124,7 +124,7 @@ export default function MembersPage() {
   )
 
   // Form handlers
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
@@ -546,25 +546,55 @@ export default function MembersPage() {
                 />
               </div>
               <div className="form-group">
+                 <div className="form-group">
                 <label className="block text-sm font-medium mb-1">Τομέας</label>
-                <input
+                <select
                   name="sector"
                   value={formData.sector || ''}
                   onChange={handleFormChange}
-                  placeholder="Τομέας"
                   className="w-full border p-2 rounded"
-                />
+                >
+                  <option value="">Επιλέξτε τομέα</option>
+                  <option value="Εκπαιδευτής">Δημόσιος</option>
+                  <option value="Ερευνητής">Ιδιωτικός</option>
+                  <option value="Άλλο">Στρατιωτικός</option>
+                  <option value="Άλλο">Πανεπιστημιακός</option>
+                  <option value="Άλλο">Άγνωστο</option>
+                </select>
+                </div>
               </div>
-              <div className="form-group">
+                <div className="form-group">
                 <label className="block text-sm font-medium mb-1">Ειδικότητα</label>
-                <input
+                <select
                   name="expertise"
                   value={formData.expertise || ''}
                   onChange={handleFormChange}
-                  placeholder="Ειδικότητα"
                   className="w-full border p-2 rounded"
-                />
-              </div>
+                >
+                  <option value="">Επιλέξτε Ειδικότητα</option>
+                  <option value="Γενική-Οικογενειακή Ιατρική">Γενική-Οικογενειακή Ιατρική</option>
+                  <option value="Παθολογία">Παθολογία</option>
+                  <option value="Βιοπαθολογία">Βιοπαθολογία</option>
+                  <option value="Νοσηλευτική">Νοσηλευτική</option>
+                  <option value="Ορθοπεδική">Ορθοπεδική</option>
+                  <option value="Παιδιατρική">Παιδιατρική</option>
+                  <option value="ΩΡΛ">ΩΡΛ</option>
+                  <option value="Ουρολογία">Ουρολογία</option>
+                  <option value="Πνευμονολογία">Πνευμονολογία</option>
+                  <option value="Μαιευτική">Μαιευτική</option>
+                  <option value="Κυτταρολογία">Κυτταρολογία</option>
+                  <option value="Νεφρολογία">Νεφρολογία</option>
+                  <option value="Αιματολογία">Αιματολογία</option>
+                  <option value="Ανοσολογία">Ανοσολογία</option>
+                  <option value="Οφθαλμολογία">Οφθαλμολογία</option>
+                  <option value="Τραυματολογία">Τραυματολογία</option>
+                  <option value="Ακτινολογία">Ακτινολογία</option>
+                  <option value="Καρδιολογία">Καρδιολογία</option>
+                  <option value="Βιολογία">Βιολογία</option>
+                  <option value="Οδοντιατρική">Οδοντιατρική</option>
+                  <option value="Φοιτητές Ιατρικής">Φοιτητές Ιατρικής</option>
+                </select>
+                </div>
               <div className="form-group">
                 <label className="block text-sm font-medium mb-1">Μονάδα Υγείας</label>
                 <input
@@ -627,16 +657,20 @@ export default function MembersPage() {
                   className="w-full border p-2 rounded"
                 />
               </div>
-              <div className="form-group">
+                <div className="form-group">
                 <label className="block text-sm font-medium mb-1">Ρόλος</label>
-                <input
+                <select
                   name="role"
                   value={formData.role || ''}
                   onChange={handleFormChange}
-                  placeholder="Ρόλος"
                   className="w-full border p-2 rounded"
-                />
-              </div>
+                >
+                  <option value="">Επιλέξτε ρόλο</option>
+                  <option value="Εκπαιδευτής">Εκπαιδευτής</option>
+                  <option value="Ερευνητής">Ερευνητής</option>
+                  <option value="Άλλο">Άλλο</option>
+                </select>
+                </div>
             </div>
 
             <div className="flex justify-end space-x-2 mt-6">
