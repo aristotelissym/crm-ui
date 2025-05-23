@@ -301,6 +301,7 @@ export default function MembersPage() {
               navigator.clipboard.writeText(selectedEmails.join(', '))
             } else if (selectedEmails.length > 0) {
               toast.success(`${selectedEmails.length} Emails Αντιγράφηκαν`)
+              navigator.clipboard.writeText(selectedEmails.join(', '))
             } else {
               toast('Δεν έχουν επιλεγεί Email', { icon: "📂", position: "top-center" })
             }
